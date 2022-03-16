@@ -1,0 +1,29 @@
+{
+  "approvals_whitelist_teams": [
+    "Owners",
+    "Calidad",
+    "approvals_whitelist_teams"
+  ],
+  "block_on_outdated_branch": true,
+  "block_on_rejected_reviews": true,
+  "branch_name": "production",
+  "dismiss_stale_approvals": true,
+  "enable_approvals_whitelist": true,
+  "enable_merge_whitelist": true,
+  "enable_push": true,
+  "enable_push_whitelist": true,
+  "enable_status_check": true,
+  "merge_whitelist_teams": [
+    "Owners",
+    "Calidad",
+    "merge_whitelist_teams"
+  ],
+  "push_whitelist_deploy_keys": true,
+  "push_whitelist_teams": [
+    "Owners",
+    "Calidad",
+    "push_whitelist_teams"
+  ],
+  "require_signed_commits": true,
+  "required_approvals": 1
+}
