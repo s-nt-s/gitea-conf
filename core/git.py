@@ -119,7 +119,7 @@ class Gitea:
 
         cfg_repo = read_js("config/repo.json")
         cfg_repo['name'] = repo
-        self.post(
+        r = self.post(
             '/orgs/{}/repos'.format(org),
             data=cfg_repo
         )
@@ -145,24 +145,34 @@ class Gitea:
             raise Exception("{}/{} no existe".format(org, repo))
         # TODO: Devolver error si el repositorio no esta inicializado
 
-        develop = r['default_branch']
-        # TODO: Verificar que la rama por defecto es la que debe ser (en caso contrarío ¿qué hacer? ¿crearla?)
-        # TODO: Evitar crear la rama production si ya existe
-        self.post(
-            '/repos/{}/{}/branches'.format(org, repo),
-            data={
-                "new_branch_name": "production",
-                "old_branch_name": develop
-            }
-        )
-        limits = read_js("config/limits.json")
+        all_limits = read_js("config/limits.json")
+        if isinstance(all_limits, dict):
+            all_limits = [all_limits]
+
+        branchs = set()
         teams = set()
-        for k, v in limits.items():
-            if k.endswith("_teams") and v:
-                teams = teams.union(v)
+        for limits in all_limits:
+            branchs.add(limits['branch_name'])
+            for k, v in limits.items():
+                if k.endswith("_teams") and v:
+                    teams = teams.union(v)
         teams = teams - set(t['name'] for t in self.get('/orgs/{}/teams'.format(org)))
+
+        for branch in sorted(branchs):
+            # TODO: Verificar que la rama por defecto es la que debe ser (en caso contrarío ¿qué hacer? ¿crearla?)
+            # TODO: Evitar crear la rama si ya existe
+            self.post(
+                '/repos/{}/{}/branches'.format(org, repo),
+                data={
+                    "new_branch_name": branch,
+                    "old_branch_name": r['default_branch']
+                }
+            )
+
         for team in teams:
             data = read_js("config/teams/{}.json".format(team.lower())) or read_js("config/teams/default.json")
             data['name'] = team
             self.post('/orgs/{}/teams'.format(org), data=data)
-        self.post('/repos/{}/{}/branch_protections'.format(org, repo), data=limits)
+
+        for limits in all_limits:
+            self.post('/repos/{}/{}/branch_protections'.format(org, repo), data=limits)
