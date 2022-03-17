@@ -49,9 +49,9 @@ crear ramas ni configurarlas.
 
 `webhook.py` es una aproximación para configurar repositorios por medio de [`system webhook`](https://docs.gitea.io/en-us/webhooks/).
 
-Consistiría en configurar [localhost:3000/admin/system-hooks](http://localhost:3000/admin/system-hooks) para que ciertos
-eventos realicen peticiones http a un servidor donde este el código que va a llamar a la api de gitea y configurar el
-repositorio.
+Consistiría en configurar [localhost:3000/admin/system-hooks](http://localhost:3000/admin/system-hooks)
+(cambiar `localhost:3000` por donde esté la instalación de gitea) para que ciertos eventos realicen peticiones
+http a un servidor donde este el código que va a llamar a la api de gitea y configurar el repositorio.
 
 NOTA: `webhook.py` está implementado con un servidor `flask` de pruebas, una implementación real debería ir en otro tipo
 de servidor.
@@ -74,3 +74,5 @@ habilitar los dos `system webhook` para que operen de la siguiente manera:
 
 1. Cuando se cree un repositorio con `auto_init = true` el `webhook` de creación de repositorio lo configurará
 2. Cuando se cree una rama `develop` o `production` se repetirá la configuración (si el repositorio fue creado con `auto_init = true` este paso será redundante, en caso contrario será necesario)
+
+NOTA: Si se quiere probar esto en local ver [docker/README.md](docker/README.md).
