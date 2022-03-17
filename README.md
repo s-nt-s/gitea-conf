@@ -53,7 +53,7 @@ Consistiría en configurar [localhost:3000/admin/system-hooks](http://localhost:
 (cambiar `localhost:3000` por donde esté la instalación de gitea) para que ciertos eventos realicen peticiones
 http a un servidor donde este el código que va a llamar a la api de gitea y configurar el repositorio.
 
-NOTA: `webhook.py` está implementado con un servidor `flask` de pruebas, una implementación real debería ir en otro tipo
+NOTA: [`webhook.py`](docker/webhook.py) está implementado con un servidor `flask` de pruebas, una implementación real debería ir en otro tipo
 de servidor.
 
 Hay dos posibilidades:
