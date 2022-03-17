@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+import base64
 
 from requests.exceptions import JSONDecodeError
 
@@ -16,6 +17,52 @@ def read_js(file):
 
 logger = logging.getLogger(__name__)
 
+class GitException(Exception):
+    pass
+
+class ExAlreadyExist(GitException):
+    pass
+
+class ExNotFound(GitException):
+    pass
+
+class ExRepoEmpty(GitException):
+    pass
+
+class ExOrgIsUser(GitException):
+    pass
+
+class ExRepoIsUser(GitException):
+    pass
+
+class NoBranch(GitException):
+    pass
+
+def new_content(name, email, dt, content, message='INIT', branch='develop', new_branch=None):
+    if new_branch is None:
+        new_branch = branch
+    content = content.encode('utf-8')
+    content = base64.b64encode(content)
+    content = content.decode('utf-8')
+    data = {
+        "author": {
+            "email": email,
+            "name": name,
+        },
+        "branch": branch,
+        "committer": {
+            "email": email,
+            "name": name,
+        },
+        "content": content,
+        "dates": {
+            "author": dt,
+            "author": dt,
+        },
+        "message": message,
+        "new_branch": new_branch
+    }
+    return data
 
 def safe_json(r):
     try:
@@ -76,7 +123,7 @@ class Gitea:
         r = self.get('/orgs/{}'.format(org))
         if r.get('message') != 'Not Found':
             if if_exists == 'fail':
-                raise Exception("{} ya existe".format(org))
+                raise ExAlreadyExist("{} ya existe".format(org))
             if if_exists == 'reuse':
                 return r
             if if_exists == 'overwrite':
@@ -89,7 +136,7 @@ class Gitea:
         cfg_org['username'] = org
         r = self.post('/orgs', data=cfg_org)
         if r.get('message', '').startswith('user already exists'):
-            raise Exception("No se puede crear la organización {} porque es un usuario".format(org))
+            raise ExOrgIsUser("No se puede crear la organización {} porque es un usuario".format(org))
         if not (isinstance(r, dict) and "id" in r):
             raise Exception("Salida no esperada %s" % r)
         r = self.get('/orgs/{}'.format(org))
@@ -109,7 +156,7 @@ class Gitea:
         r = self.get('/repos/{}/{}'.format(org, repo))
         if r.get('message') != 'Not Found':
             if if_exists == 'fail':
-                raise Exception("{} ya existe".format(org))
+                raise ExAlreadyExist("{} ya existe".format(org))
             if if_exists == 'reuse':
                 return r
             if if_exists == 'overwrite':
@@ -137,13 +184,25 @@ class Gitea:
         r = self.get('/orgs/{}'.format(org))
         if r.get('message') == 'Not Found':
             # Es un repositorio de usuario, no de una organización
-            # TODO: ¿Qué hacer con los repositorios de organizaciones?
-            logger.debug("{}/{} es un repositorio de usuario".format(org, repo))
-            return
+            # TODO: ¿Qué hacer con los repositorios de usuarios?
+            raise ExRepoIsUser("{}/{} es un repositorio de usuario".format(org, repo))
         r = self.get('/repos/{}/{}'.format(org, repo))
         if r.get('message') == 'Not Found':
-            raise Exception("{}/{} no existe".format(org, repo))
-        # TODO: Devolver error si el repositorio no esta inicializado
+            raise ExNotFound("{}/{} no existe".format(org, repo))
+        default_branch = r['default_branch']
+
+        br = self.get("/repos/{}/{}/branches/{}".format(org, repo, default_branch))
+        if isinstance(br, dict) and br.get('errors') and len(br['errors'])>0:
+            # TODO: Evitar error inicializando el repositorio
+            # https://github.com/go-gitea/gitea/issues/10993
+            # https://github.com/go-gitea/gitea/issues/10982
+            # self.post("/repos/{}/{}/contents/{}".format(org, repo, "README.md"), data=new_content(
+            #     r['owner']['login'],
+            #     r['owner']['email'],
+            #     r['updated_at'],
+            #     r['full_name']
+            # ))
+            raise NoBranch("\n".join(br['errors']))
 
         all_limits = read_js("config/limits.json")
         if isinstance(all_limits, dict):
@@ -165,7 +224,7 @@ class Gitea:
                 '/repos/{}/{}/branches'.format(org, repo),
                 data={
                     "new_branch_name": branch,
-                    "old_branch_name": r['default_branch']
+                    "old_branch_name": default_branch
                 }
             )
 
