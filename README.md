@@ -45,9 +45,9 @@ Para los `webhook` realmente solo será necesario [`config/limits.json`](config/
 La clave de todo está en el `auto_init = true`, ya que si un repositorio no está inicializado no se le puede
 crear ramas ni configurarlas.
 
-## docker/webhook.py
+## webhook.py
 
-`webhook.py` es una aproximación para configurar repositorios por medio de [`system webhook`](https://docs.gitea.io/en-us/webhooks/).
+[`webhook.py`](docker/webhook.py) es una aproximación para configurar repositorios por medio de [`system webhook`](https://docs.gitea.io/en-us/webhooks/).
 
 Consistiría en configurar [localhost:3000/admin/system-hooks](http://localhost:3000/admin/system-hooks)
 (cambiar `localhost:3000` por donde esté la instalación de gitea) para que ciertos eventos realicen peticiones
