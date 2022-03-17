@@ -6,3 +6,4 @@ Instalación gitea en docker para hacer pruebas
 * Ver ip host en contenedor: `docker exec $(docker ps | grep "gitea/gitea" | cut -d' ' -f1) /sbin/ip route|awk '/default/ { print $3 }'`
 * Entrar a gitea: http://localhost:3000/
 * Reiniciar: `docker-compose down && docker-compose up -d && sleep 5 && docker exec $(docker ps | grep "gitea/gitea" | cut -d' ' -f1) /sbin/ip route|awk '/default/ { print $3 }'`
+
