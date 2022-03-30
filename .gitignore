@@ -2,6 +2,7 @@ docker/data
 debug/
 .idea
 last/
+notas.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
